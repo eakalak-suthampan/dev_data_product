@@ -1,0 +1,76 @@
+Principal Components Analysis (PCA) for Wine Dataset
+========================================================
+author: Eakalak Suthampan
+date: 26 Febuary 2017
+autosize: true
+
+Introduction
+========================================================
+
+This project will use Principal Components Analysis (PCA) technique to do data exploration on the Wine dataset and then use PCA conponents as predictors in RandomForest to predict wine types.
+
+The shiny app for this project is at
+[https://suteak.shinyapps.io/dev_data_product/](https://suteak.shinyapps.io/dev_data_product/)
+
+The source code for this project are at
+[https://github.com/eakalak-suthampan/dev_data_product](https://github.com/eakalak-suthampan/dev_data_product)
+
+The presentation for this project is at
+[http://rpubs.com/suteak/253795](http://rpubs.com/suteak/253795)
+
+Wine Dataset
+========================================================
+There are 13 predictors to predict Wine Types (3 Types)
+```{r}
+data(wine, package = 'rattle')
+str(wine,list.len = 5)
+```
+
+PCA plot
+========================================================
+
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(ggfortify))
+pca.all <- prcomp(wine[, -1], center = TRUE, scale. = TRUE)
+autoplot(
+                                pca.all,
+                                data = wine,
+                                colour = 'Type',
+                                frame = TRUE,
+                                frame.type = 't',
+                                frame.colour = 'Type',
+                                scale = 0,
+                                loadings = TRUE,
+                                loadings.colour = 'blue',
+                                loadings.label = TRUE,
+                                loadings.label.size = 5
+                        )
+```
+
+PCA will be used to reduce 13 predictors variables to 2 PCA variables. The "autoplot" function can be used to plot PCA.
+
+Prediction Model
+========================================================
+2 PCA variables will be used as predictors in RandomForest to predict wine types.
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(randomForest))
+suppressPackageStartupMessages(library(caret))
+set.seed(555)
+inTrain <- createDataPartition(y = wine$Type, p = 0.9, list = FALSE)
+testing <- wine[-inTrain, ]
+training <- wine[inTrain, ]
+pca.train <- prcomp(training[, -1], center = TRUE, scale. = TRUE)
+pca.train.df <- data.frame(training$Type, pca.train$x[, 1], pca.train$x[, 2])
+names(pca.train.df) <- c("Type", "PC1", "PC2")
+pca.test <- predict(pca.train, testing[, -1])
+pca.test.df <- as.data.frame(pca.test)
+pca.test.df <- pca.test.df[, 1:2]
+pca.test.df$Type <- testing$Type
+
+```
+```{r}
+rfFit <- randomForest(Type ~ PC1 + PC2, data = pca.train.df)
+paste("training accuracy is",confusionMatrix(training$Type,predict(rfFit))$overall[1]*100,"%")
+paste("testing accuracy is",confusionMatrix(testing$Type,predict(rfFit,pca.test.df))$overall[1]*100,"%")
+```
+
