@@ -1,2 +1,2 @@
 # README
-## please read (presentation.md)[https://github.com/eakalak-suthampan/dev_data_product/blob/master/presentation.md] for detail.
+## please read (https://github.com/eakalak-suthampan/dev_data_product/blob/master/presentation.md)[presentation.md] for detail.
